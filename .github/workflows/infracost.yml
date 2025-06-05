@@ -13,6 +13,12 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Debug Start
+        run: |
+          echo "Job started at $(date)"
+          echo "Runner OS: $(uname -a)"
+          echo "GitHub Context: ${{ toJson(github) }}"
+
       - name: Setup Infracost
         uses: infracost/actions/setup@v2
         with:
