@@ -12,7 +12,7 @@ jobs:
       contents: read
       pull-requests: write
 
-steps:
+    steps:
       - name: Debug Start
         run: |
           echo "Job started at $(date)"
