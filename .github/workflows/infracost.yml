@@ -3,7 +3,7 @@ name: Infracost CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-
+  workflow_dispatch:  # Permite ejecución manual
 jobs:
   infracost:
     runs-on: ubuntu-latest
