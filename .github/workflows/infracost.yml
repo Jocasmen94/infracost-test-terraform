@@ -3,21 +3,21 @@ name: Infracost CI
 on:
   pull_request:
     paths:
-        - '**/*.tf'
-        - '**/*.tfvars'
-        - '**/*.tfvars.json'
-        - '**/infracost.yml'
-        - '**/.terraform.lock.hcl'
-        - '**/modules/**'
+      - 'infracost-test-terraform/workspaces/**.tf'
+      - 'infracost-test-terraform/workspaces/**.tfvars'
+      - 'infracost-test-terraform/workspaces/**.tfvars.json'
+      - 'infracost-test-terraform/workspaces/**/infracost.yml'
+      - 'infracost-test-terraform/workspaces/**/.terraform.lock.hcl'
+      - 'infracost-test-terraform/workspaces/**/modules/**'
 
 jobs:
   infracost:
     runs-on: ubuntu-latest
-    name: Infracost
+    name: Infracost Diff
     permissions:
       contents: read
       pull-requests: write
-    
+
     steps:
       - name: Setup Infracost
         uses: infracost/actions/setup@v2
@@ -29,26 +29,29 @@ jobs:
         with:
           ref: '${{ github.event.pull_request.base.ref }}'
 
-      - name: Generate Infracost cost estimate baseline
+      - name: Generate Infracost baseline
         run: |
-          infracost breakdown --path=. \
-                              --format=json \
-                              --out-file=/tmp/infracost-base.json
+          infracost diff \
+            --config-file=infracost-test-terraform/workspaces/kubernetes/prod/main/infracost.yml \
+            --format=json \
+            --out-file=/tmp/infracost-base.json
 
       - name: Checkout PR branch
         uses: actions/checkout@v4
 
       - name: Generate Infracost diff
         run: |
-          infracost diff --path=. \
-                        --format=json \
-                        --compare-to=/tmp/infracost-base.json \
-                        --out-file=/tmp/infracost.json
+          infracost diff \
+            --config-file=infracost-test-terraform/workspaces/kubernetes/prod/main/infracost.yml \
+            --format=json \
+            --compare-to=/tmp/infracost-base.json \
+            --out-file=/tmp/infracost.json
 
       - name: Post Infracost comment
         run: |
-          infracost comment github --path=/tmp/infracost.json \
-                                   --repo=$GITHUB_REPOSITORY \
-                                   --github-token=${{github.token}} \
-                                   --pull-request=${{github.event.pull_request.number}} \
-                                   --behavior=update
+          infracost comment github \
+            --path=/tmp/infracost.json \
+            --repo=$GITHUB_REPOSITORY \
+            --github-token=${{ github.token }} \
+            --pull-request=${{ github.event.pull_request.number }} \
+            --behavior=update
