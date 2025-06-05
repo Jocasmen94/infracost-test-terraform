@@ -18,6 +18,19 @@ jobs:
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
+      # Checkout PR branch first
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+
+      # Detect config file path dynamically in the PR branch
+      - name: Detect config file path
+        id: detect
+        run: |
+          CONFIG_PATH=$(find infracost-test-terraform/workspaces/kubernetes/prod -type f -name 'infracost.yml' | head -n 1)
+          echo "CONFIG_PATH=$CONFIG_PATH" >> $GITHUB_ENV
+          echo "Detected Infracost config at: $CONFIG_PATH"
+
+      # Checkout base branch
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
@@ -25,18 +38,23 @@ jobs:
 
       - name: Generate Infracost baseline
         run: |
-          infracost diff \
-            --config-file=$(find infracost-test-terraform/workspaces/kubernetes/prod -name infracost.yml | grep "${{ github.event.pull_request.base.ref }}" || true) \
-            --format=json \
-            --out-file=/tmp/infracost-base.json
+          if [ -f "$CONFIG_PATH" ]; then
+            infracost diff \
+              --config-file="$CONFIG_PATH" \
+              --format=json \
+              --out-file=/tmp/infracost-base.json
+          else
+            echo "Missing config at $CONFIG_PATH in base branch"; exit 1
+          fi
 
-      - name: Checkout PR branch
+      # Checkout PR branch again
+      - name: Checkout PR branch again
         uses: actions/checkout@v4
 
       - name: Generate Infracost diff
         run: |
           infracost diff \
-            --config-file=$(find infracost-test-terraform/workspaces/kubernetes/prod -name infracost.yml | grep "${{ github.head_ref }}" || true) \
+            --config-file="$CONFIG_PATH" \
             --format=json \
             --compare-to=/tmp/infracost-base.json \
             --out-file=/tmp/infracost.json
