@@ -2,13 +2,7 @@ name: Infracost CI
 
 on:
   pull_request:
-    paths:
-      - 'infracost-test-terraform/workspaces/**/*.tf'
-      - 'infracost-test-terraform/workspaces/**/*.tfvars'
-      - 'infracost-test-terraform/workspaces/**/*.tfvars.json'
-      - 'infracost-test-terraform/workspaces/**/infracost.yml'
-      - 'infracost-test-terraform/workspaces/**/.terraform.lock.hcl'
-      - 'infracost-test-terraform/workspaces/**/modules/**'
+    types: [opened, synchronize, reopened]
 
 jobs:
   infracost:
