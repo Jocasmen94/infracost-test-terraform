@@ -21,12 +21,18 @@ jobs:
       # Checkout PR branch first
       - name: Checkout PR branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       # Detect config file path dynamically in the PR branch
       - name: Detect config file path
         id: detect
         run: |
-          CONFIG_PATH=$(find infracost-test-terraform/workspaces/kubernetes/prod -type f -name 'infracost.yml' | head -n 1)
+          CONFIG_PATH=$(find infracost-test-terraform/workspaces/kubernetes/prod -type f -name 'infracost.yml' 2>/dev/null | head -n 1)
+          if [ -z "$CONFIG_PATH" ]; then
+            echo "No infracost.yml found in infracost-test-terraform/workspaces/kubernetes/prod. Exiting..."
+            exit 1
+          fi
           echo "CONFIG_PATH=$CONFIG_PATH" >> $GITHUB_ENV
           echo "Detected Infracost config at: $CONFIG_PATH"
 
@@ -34,7 +40,7 @@ jobs:
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
-          ref: '${{ github.event.pull_request.base.ref }}'
+          ref: ${{ github.event.pull_request.base.ref }}
 
       - name: Generate Infracost baseline
         run: |
@@ -50,6 +56,8 @@ jobs:
       # Checkout PR branch again
       - name: Checkout PR branch again
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Generate Infracost diff
         run: |
