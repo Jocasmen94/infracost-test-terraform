@@ -98,9 +98,18 @@ jobs:
           infracost comment github \
             --path=/tmp/infracost.json \
             --repo=$GITHUB_REPOSITORY \
-            --github-token=${{ github.token }} \
+            --github-token=${{ secrets.GITHUB_TOKEN }} \
             --pull-request=${{ github.event.pull_request.number }} \
             --behavior=update
+
+      - name: Upload to Infracost Cloud (Push Event)
+        if: github.event_name == 'push'
+        run: |
+          infracost upload \
+            --path=/tmp/infracost.json \
+            --repo=$GITHUB_REPOSITORY \
+            --commit=$GITHUB_SHA \
+            --github-token=${{ secrets.GITHUB_TOKEN }}
 
       - name: Show Infracost diff (Push Event)
         if: github.event_name == 'push'
