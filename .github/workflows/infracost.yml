@@ -6,7 +6,7 @@ on:
 
 jobs:
   infracost:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     name: Infracost Diff
     permissions:
       contents: read
