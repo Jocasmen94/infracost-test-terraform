@@ -4,7 +4,7 @@ provider "aws" {
 
 resource "aws_instance" "web" {
   ami           = "ami-0c55b159cbfafe1f0"
-  instance_type = "t3.micro"
+  instance_type = "t3.medium" 
   
   tags = {
     Name = "infracost-test-instance"
