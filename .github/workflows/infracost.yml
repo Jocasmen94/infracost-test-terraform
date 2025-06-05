@@ -3,7 +3,7 @@ name: Infracost CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  workflow_dispatch:  # Permite ejecución manual
+  workflow_dispatch:  # Permite ejecución manual desde cualquier rama
 
 jobs:
   infracost:
@@ -54,14 +54,6 @@ jobs:
             exit 1
           fi
 
-      # Extract path from infracost.yml
-      - name: Extract project path
-        id: extract_path
-        run: |
-          PROJECT_PATH=$(yq eval '.projects[0].path' "$CONFIG_PATH")
-          echo "PROJECT_PATH=$PROJECT_PATH" >> $GITHUB_ENV
-          echo "Extracted project path: $PROJECT_PATH"
-
       # Checkout base branch
       - name: Checkout base branch
         uses: actions/checkout@v4
@@ -72,7 +64,6 @@ jobs:
         run: |
           if [ -f "$CONFIG_PATH" ]; then
             infracost breakdown \
-              --path="$PROJECT_PATH" \
               --config-file="$CONFIG_PATH" \
               --format=json \
               --out-file=/tmp/infracost-base.json
@@ -89,7 +80,6 @@ jobs:
       - name: Generate Infracost diff
         run: |
           infracost diff \
-            --path="$PROJECT_PATH" \
             --config-file="$CONFIG_PATH" \
             --format=json \
             --compare-to=/tmp/infracost-base.json \
