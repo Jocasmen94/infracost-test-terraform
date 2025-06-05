@@ -36,14 +36,15 @@ jobs:
       # Debug repository structure
       - name: List repository files
         run: |
-          ls -R infracost-test-terraform/
+          pwd  # Muestra el directorio de trabajo actual
+          ls -R .  # Lista todos los archivos desde el directorio actual
           echo "Current directory contents: $(ls -a)"
 
       # Detect config file path with fixed location
       - name: Detect config file path
         id: detect
         run: |
-          CONFIG_PATH="infracost-test-terraform/workspaces/kubernetes/prod/main/infracost.yml"
+          CONFIG_PATH="workspaces/kubernetes/prod/main/infracost.yml"
           if [ -f "$CONFIG_PATH" ]; then
             echo "CONFIG_PATH=$CONFIG_PATH" >> $GITHUB_ENV
             echo "Detected Infracost config at: $CONFIG_PATH"
