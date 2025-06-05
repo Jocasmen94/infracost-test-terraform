@@ -3,4 +3,3 @@ version: 0.1
 projects:
   - path: .
     name: prod-main-k8s
-    workspace: prod
