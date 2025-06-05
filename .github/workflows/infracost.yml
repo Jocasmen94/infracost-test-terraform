@@ -3,10 +3,12 @@ name: Infracost CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:  # Permite ejecución manual
 
 jobs:
   infracost:
-    runs-on: ubuntu-20.04
+    if: github.event.pull_request.user.login != 'github-actions[bot]'  # Evita bucles causados por el bot
+    runs-on: ubuntu-20.04  # Usa ubuntu-20.04 para evitar saturación
     name: Infracost Diff
     permissions:
       contents: read
@@ -17,6 +19,9 @@ jobs:
         run: |
           echo "Job started at $(date)"
           echo "Runner OS: $(uname -a)"
+          echo "Event Name: ${{ github.event_name }}"
+          echo "Event Action: ${{ github.event.action }}"
+          echo "PR User: ${{ github.event.pull_request.user.login }}"
           echo "GitHub Context: ${{ toJson(github) }}"
 
       - name: Setup Infracost
@@ -82,3 +87,7 @@ jobs:
             --github-token=${{ github.token }} \
             --pull-request=${{ github.event.pull_request.number }} \
             --behavior=update
+
+      - name: Debug End
+        run: |
+          echo "Job completed at $(date)"
