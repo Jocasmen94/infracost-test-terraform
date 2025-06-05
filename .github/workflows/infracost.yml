@@ -3,8 +3,12 @@ name: Infracost CI
 on:
   pull_request:
     paths:
-      - '**.tf'
-      - 'infracost.yml'
+        - '**/*.tf'
+        - '**/*.tfvars'
+        - '**/*.tfvars.json'
+        - '**/infracost.yml'
+        - '**/.terraform.lock.hcl'
+        - '**/modules/**'
 
 jobs:
   infracost:
