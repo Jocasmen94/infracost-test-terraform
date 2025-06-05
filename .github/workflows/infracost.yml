@@ -41,13 +41,6 @@ jobs:
           ls -R .  # Lista todos los archivos desde el directorio actual
           echo "Current directory contents: $(ls -a)"
 
-      # Debug Terraform files in PR branch
-      - name: Check Terraform files in PR branch
-        run: |
-          echo "Content of main.tf in PR branch:"
-          cat workspaces/kubernetes/prod/main/main.tf || echo "Failed to read main.tf"
-          echo "-------------------"
-
       # Detect config file path with fixed location
       - name: Detect config file path
         id: detect
@@ -66,13 +59,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
-
-      # Debug Terraform files in base branch
-      - name: Check Terraform files in base branch
-        run: |
-          echo "Content of main.tf in base branch:"
-          cat workspaces/kubernetes/prod/main/main.tf || echo "Failed to read main.tf"
-          echo "-------------------"
 
       - name: Generate Infracost baseline
         run: |
