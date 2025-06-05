@@ -1,0 +1,4 @@
+version: 0.1
+projects:
+  - path: infracost-test-terraform/workspaces/kubernetes/prod/main
+    name: prod-main-k8s
