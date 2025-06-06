@@ -102,8 +102,7 @@ jobs:
             --pull-request=${{ github.event.pull_request.number }} \
             --behavior=update
 
-      - name: Upload to Infracost Cloud (Push Event)
-        if: github.event_name == 'push'
+      - name: Upload to Infracost Cloud
         run: |
           infracost upload \
             --path=/tmp/infracost.json \
