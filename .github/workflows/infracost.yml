@@ -3,11 +3,7 @@ name: Infracost CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  push:
-    branches:
-      - feat/**
-      - prod-main-k8s
-  workflow_dispatch:
+  workflow_dispatch:  # Permite ejecución manual desde cualquier rama
 
 jobs:
   infracost:
@@ -32,20 +28,20 @@ jobs:
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      # Checkout PR branch first (or the branch for push events)
-      - name: Checkout branch
+      # Checkout PR branch first
+      - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       # Debug repository structure
       - name: List repository files
         run: |
-          pwd
-          ls -R .
+          pwd  # Muestra el directorio de trabajo actual
+          ls -R .  # Lista todos los archivos desde el directorio actual
           echo "Current directory contents: $(ls -a)"
 
-      # Detect config file path
+      # Detect config file path with fixed location
       - name: Detect config file path
         id: detect
         run: |
@@ -54,19 +50,17 @@ jobs:
             echo "CONFIG_PATH=$CONFIG_PATH" >> $GITHUB_ENV
             echo "Detected Infracost config at: $CONFIG_PATH"
           else
-            echo "Infracost.yml not found at $CONFIG_PATH in branch. Exiting..."
+            echo "Infracost.yml not found at $CONFIG_PATH in PR branch. Exiting..."
             exit 1
           fi
 
-      # Checkout base branch (only for PRs)
+      # Checkout base branch
       - name: Checkout base branch
-        if: github.event_name == 'pull_request'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.base.ref }}
 
       - name: Generate Infracost baseline
-        if: github.event_name == 'pull_request'
         run: |
           if [ -f "$CONFIG_PATH" ]; then
             infracost breakdown \
@@ -77,9 +71,8 @@ jobs:
             echo "Missing config at $CONFIG_PATH in base branch"; exit 1
           fi
 
-      # Checkout PR branch again (only for PRs)
+      # Checkout PR branch again
       - name: Checkout PR branch again
-        if: github.event_name == 'pull_request'
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
@@ -92,28 +85,14 @@ jobs:
             --compare-to=/tmp/infracost-base.json \
             --out-file=/tmp/infracost.json
 
-      - name: Post Infracost comment (PR Event)
-        if: github.event_name == 'pull_request'
+      - name: Post Infracost comment
         run: |
           infracost comment github \
             --path=/tmp/infracost.json \
             --repo=$GITHUB_REPOSITORY \
-            --github-token=${{ secrets.GITHUB_TOKEN }} \
+            --github-token=${{ github.token }} \
             --pull-request=${{ github.event.pull_request.number }} \
             --behavior=update
-
-      - name: Upload to Infracost Cloud
-        run: |
-          infracost upload \
-            --path=/tmp/infracost.json \
-            --repo=$GITHUB_REPOSITORY \
-            --commit=$GITHUB_SHA \
-            --github-token=${{ secrets.GITHUB_TOKEN }}
-
-      - name: Show Infracost diff (Push Event)
-        if: github.event_name == 'push'
-        run: |
-          cat /tmp/infracost.json
 
       - name: Debug End
         run: |
