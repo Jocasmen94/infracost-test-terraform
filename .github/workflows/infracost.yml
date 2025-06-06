@@ -3,7 +3,7 @@ name: Infracost CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  workflow_dispatch:  # Permite ejecución manual desde cualquier rama
+  workflow_dispatch:
 
 jobs:
   infracost:
@@ -28,20 +28,17 @@ jobs:
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      # Checkout PR branch first
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
-      # Debug repository structure
       - name: List repository files
         run: |
-          pwd  # Muestra el directorio de trabajo actual
-          ls -R .  # Lista todos los archivos desde el directorio actual
+          pwd
+          ls -R .
           echo "Current directory contents: $(ls -a)"
 
-      # Detect config file path with fixed location
       - name: Detect config file path
         id: detect
         run: |
@@ -54,7 +51,6 @@ jobs:
             exit 1
           fi
 
-      # Checkout base branch
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
@@ -71,7 +67,6 @@ jobs:
             echo "Missing config at $CONFIG_PATH in base branch"; exit 1
           fi
 
-      # Checkout PR branch again
       - name: Checkout PR branch again
         uses: actions/checkout@v4
         with:
@@ -95,14 +90,13 @@ jobs:
             --behavior=update
 
       - name: Upload Infracost report to Cloud
+        env:
+          INFRACOST_VCS_REPOSITORY_URL: https://github.com/${{ github.repository }}
+          INFRACOST_VCS_PULL_REQUEST_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+          INFRACOST_VCS_BRANCH: ${{ github.head_ref || github.ref_name }}
+          INFRACOST_VCS_COMMIT_SHA: ${{ github.sha }}
         run: |
-          infracost upload \
-            --path=/tmp/infracost.json \
-            --repo=$GITHUB_REPOSITORY \
-            --commit=$GITHUB_SHA \
-            --branch=${{ github.head_ref || github.ref_name }} \
-            --pull-request=${{ github.event.pull_request.number }} \
-            --github-token=${{ secrets.GITHUB_TOKEN }}
+          infracost upload --path=/tmp/infracost.json
 
       - name: Debug End
         run: |
