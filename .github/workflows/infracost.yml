@@ -94,6 +94,16 @@ jobs:
             --pull-request=${{ github.event.pull_request.number }} \
             --behavior=update
 
+      - name: Upload Infracost report to Cloud
+        run: |
+          infracost upload \
+            --path=/tmp/infracost.json \
+            --repo=$GITHUB_REPOSITORY \
+            --commit=$GITHUB_SHA \
+            --branch=${{ github.head_ref || github.ref_name }} \
+            --pull-request=${{ github.event.pull_request.number }} \
+            --github-token=${{ secrets.GITHUB_TOKEN }}
+
       - name: Debug End
         run: |
           echo "Job completed at $(date)"
